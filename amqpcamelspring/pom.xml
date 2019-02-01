@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>qpid-dispatch-samples</artifactId>
+        <groupId>org.apache.qpid.dispatch.samples</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>amqp-camel-spring</artifactId>
+
+    <profiles>
+        <profile>
+            <id>TimedSender</id>
+            <properties>
+                <target.main.class>org.apache.qpid.dispatch.amqp.samples.amqpcamelspring.main.TimedSenderMain</target.main.class>
+            </properties>
+        </profile>
+        <profile>
+            <id>ConsumeAndDispatch</id>
+            <properties>
+                <target.main.class>org.apache.qpid.dispatch.amqp.samples.amqpcamelspring.main.ConsumeAndDispatchMain</target.main.class>
+            </properties>
+        </profile>
+        <profile>
+            <id>SimpleConsumer</id>
+            <properties>
+                <target.main.class>org.apache.qpid.dispatch.amqp.samples.amqpcamelspring.main.SimpleConsumerMain</target.main.class>
+            </properties>
+        </profile>
+    </profiles>
+
+    <build>
+        <plugins>
+            <!-- Allows the example to be run via 'mvn compile exec:java' -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>${target.main.class}</mainClass>
+                    <includePluginDependencies>false</includePluginDependencies>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

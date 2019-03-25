@@ -26,7 +26,7 @@
 
     <!-- AMQP / JMS Beans -->
     <bean id="jmsConnectionFactory" class="org.apache.qpid.jms.JmsConnectionFactory">
-        <property name="remoteURI" value="amqp://${amqp.host}:${amqp.port}" />
+        <property name="remoteURI" value="${amqp.transport}://${amqp.host}:${amqp.port}" />
         <!--<property name="username" value="admin"/>-->
         <!--<property name="password" value="admin"/>-->
     </bean>

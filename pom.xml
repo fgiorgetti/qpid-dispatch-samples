@@ -16,7 +16,7 @@
 
     <properties>
         <env.slf4j.version>1.7.25</env.slf4j.version>
-        <env.camel.version>2.23.1</env.camel.version>
+        <env.camel.version>3.2.0</env.camel.version>
         <env.spring.version>5.1.4.RELEASE</env.spring.version>
         <env.qpidjms.version>0.40.0</env.qpidjms.version>
     </properties>

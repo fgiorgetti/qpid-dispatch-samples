@@ -3,11 +3,13 @@
 curdir=`readlink -f .`
 network="testnet"
 image="registry.redhat.io/amq7/amq-interconnect"
+exposed=15672
 
 function run() {
     name=$1
     dir=$2
-    sudo podman run --name ${name} --network ${network} --rm -d -v ${curdir}/${dir}:/var/lib/qdrouterd:Z ${image} qdrouterd -c /var/lib/qdrouterd/qdrouterd.conf
+    sudo podman run --name ${name} -p ${exposed}:5672 --network ${network} --rm -d -v ${curdir}/${dir}:/var/lib/qdrouterd:Z ${image} qdrouterd -c /var/lib/qdrouterd/qdrouterd.conf
+    ((exposed++))
 }
 
 function running() {

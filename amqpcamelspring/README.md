@@ -9,6 +9,8 @@ Before running the samples, make sure you have an AMQP Server running (default: 
 ## Configuration
 
 You can customize default configuration used by the internal clients by modifying the ```camel.properties``` file.
+It can be modified inside the project itself, or you can override it by installing a copy of it
+into /etc/qpid-dispatch-samples/amqpcamelspring/camel.properties.
 
 ## Clients
 

@@ -1,50 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:camel="http://camel.apache.org/schema/spring"
-       xmlns:util="http://www.springframework.org/schema/util"
-       xmlns:ctx="http://www.springframework.org/schema/context"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans
-          http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
-          http://camel.apache.org/schema/spring
-          http://camel.apache.org/schema/spring/camel-spring.xsd
-          http://www.springframework.org/schema/util
-          http://www.springframework.org/schema/util/spring-util-4.2.xsd
-          http://www.springframework.org/schema/context
-          http://www.springframework.org/schema/context/spring-context.xsd">
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+    ">
 
     <!-- spring property placeholder, ignore resource not found as the file resource is for unit testing -->
-    <ctx:property-placeholder location="classpath:camel.properties"
-                              ignore-resource-not-found="true"/>
+    <property-placeholder xmlns="http://www.springframework.org/schema/context"
+                              location="classpath:camel.properties,file:/etc/qpid-dispatch-samples/amqpcamelspring/camel.properties"
+                          ignore-resource-not-found="true"/>
     <bean id="properties" class="org.apache.camel.component.properties.PropertiesComponent">
-        <property name="location" value="classpath:camel.properties"/>
+        <property name="location"
+                  value="classpath:camel.properties,file:/etc/qpid-dispatch-samples/amqpcamelspring/camel.properties"/>
+        <property name="ignoreMissingLocation" value="true"/>
     </bean>
 
     <camelContext xmlns="http://camel.apache.org/schema/spring">
-        <template id="camelTemplate" />
+        <template id="camelTemplate"/>
     </camelContext>
 
     <!-- AMQP / JMS Beans -->
     <bean id="jmsConnectionFactory" class="org.apache.qpid.jms.JmsConnectionFactory">
-        <property name="remoteURI" value="${amqp.transport}://${amqp.host}:${amqp.port}" />
+        <property name="remoteURI" value="${amqp.transport}://${amqp.host}:${amqp.port}"/>
         <!--<property name="username" value="admin"/>-->
         <!--<property name="password" value="admin"/>-->
     </bean>
 
     <bean id="jmsCachingConnectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
-        <property name="targetConnectionFactory" ref="jmsConnectionFactory" />
+        <property name="targetConnectionFactory" ref="jmsConnectionFactory"/>
     </bean>
 
-    <bean id="jmsConfig" class="org.apache.camel.component.jms.JmsConfiguration" >
-        <property name="connectionFactory" ref="jmsCachingConnectionFactory" />
-        <property name="cacheLevelName" value="CACHE_CONSUMER" />
+    <bean id="jmsConfig" class="org.apache.camel.component.jms.JmsConfiguration">
+        <property name="connectionFactory" ref="jmsCachingConnectionFactory"/>
+        <property name="cacheLevelName" value="CACHE_CONSUMER"/>
     </bean>
 
     <bean id="amqp" class="org.apache.camel.component.amqp.AMQPComponent">
-        <property name="configuration" ref="jmsConfig" />
+        <property name="configuration" ref="jmsConfig"/>
     </bean>
 
     <!-- Internal Components -->
-    <bean id="msgLogger" class="org.apache.qpid.dispatch.amqp.samples.amqpcamelspring.beans.MessageLogger" />
+    <bean id="msgLogger" class="org.apache.qpid.dispatch.amqp.samples.amqpcamelspring.beans.MessageLogger"/>
 
 </beans>

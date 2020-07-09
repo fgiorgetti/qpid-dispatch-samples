@@ -34,7 +34,7 @@ public abstract class RunCamelContext {
     public void runCamel(String[] args) throws Exception {
 
         // Loading context from XML
-        applicationContext = new ClassPathXmlApplicationContext("camel-context.xml");
+        applicationContext = new ClassPathXmlApplicationContext("/camel-context.xml");
         camelContext = new SpringCamelContext(applicationContext);
 
         // Defining loaded context

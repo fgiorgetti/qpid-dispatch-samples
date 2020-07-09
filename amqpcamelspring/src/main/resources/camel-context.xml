@@ -24,8 +24,10 @@
     <!-- AMQP / JMS Beans -->
     <bean id="jmsConnectionFactory" class="org.apache.qpid.jms.JmsConnectionFactory">
         <property name="remoteURI" value="${amqp.transport}://${amqp.host}:${amqp.port}"/>
-        <!--<property name="username" value="admin"/>-->
-        <!--<property name="password" value="admin"/>-->
+        <property name="transport.trustAll" value="true"/>
+        <property name="transport.verifyHost" value="false"/>
+        <property name="username" value="${amqp.username}"/>
+        <property name="password" value="${amqp.password}"/>
     </bean>
 
     <bean id="jmsCachingConnectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">

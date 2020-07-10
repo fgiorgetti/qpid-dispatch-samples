@@ -8,3 +8,4 @@ RUN git clone https://github.com/fgiorgetti/qpid-dispatch-samples.git && \
 FROM openjdk:8-alpine
 WORKDIR /amqpcamelspring
 COPY --from=builder /git/qpid-dispatch-samples/amqpcamelspring/target/amqp-camel-spring-1.0-SNAPSHOT.jar ./
+ENV CLASSPATH='/amqpcamelspring/*'

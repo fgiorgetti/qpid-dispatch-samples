@@ -1,27 +1,33 @@
-from proton.handlers import MessagingHandler
-from proton.reactor import Container
-from proton import Message
-import common
 import logging
-import optparse
-import socket
-import os
 import multiprocessing
 
-"""
+from datetime import datetime
+from proton.handlers import MessagingHandler
+from proton.reactor import Container
 
+import common
+
+"""
+This AMQP receiver application, receives messages, with an expected
+body and properties sizes (if not met a message will be logged).
+After `reconnect_after` (or CLIENT_RECONNECT_AFTER env) messages
+have been received, the receiver will recycle its connection.
+
+When executed, it will spawn multiple processes based on provided `--processes`
+(or CLIENT_PROCESSES env).
+
+You can execute it using CLI arguments, or setting environment variables.
+Run with `--help` for more info.
 """
 
 # public receiver variables (initialized after parsing)
-expected_body = ""
-expected_properties = dict()
 expected_body_size = 0
 expected_properties_size = 0
 
 
 class Receiver(MessagingHandler):
     def __init__(self, opts):
-        super(Receiver, self).__init__()
+        super(Receiver, self).__init__(auto_accept=True, auto_settle=True)
         self.host = opts.host
         self.port = opts.port
         self.address = opts.address
@@ -32,6 +38,7 @@ class Receiver(MessagingHandler):
         self._next_task = None
         # internal stats
         self._received = 0
+        self._elapsed_times = list()
 
     def on_start(self, event):
         self.create_receiver(event)
@@ -41,6 +48,9 @@ class Receiver(MessagingHandler):
             logging.info("closing receiver")
             self._receiver.close()
             event.connection.close()
+            # should probably report to a push gateway
+            # for elapsed_ms in self._elapsed_times:
+            #     pass
             self._reset_stats()
         logging.info("creating receiver")
         self._receiver = event.container.create_receiver(self._url)
@@ -49,8 +59,22 @@ class Receiver(MessagingHandler):
         self._received += 1
         msg = event.message
         body_size = len(msg.body)
-        prop_size = sum([len(k)+len(msg.properties[k]) for k in msg.properties])
-        logging.debug("received [body:%d, properties:%d]" % (body_size, prop_size))
+        prop_size = 0
+
+        elapsed_ms = -1
+        if msg.properties:
+            # calculate elapsed time based on incoming time property
+            if "time" in msg.properties:
+                now = datetime.now()
+                time_sent = msg.properties['time']  # ISO Format
+                elapsed = now - datetime.fromisoformat(time_sent)
+                elapsed_ms = int(elapsed.total_seconds()*1000)
+                # store elapsed time in ms
+                self._elapsed_times.append(elapsed_ms)
+
+            prop_size = sum([len(k)+len(msg.properties[k]) for k in msg.properties])
+
+        logging.info("received [body:%d, properties:%d] - elapsed (ms): %d" % (body_size, prop_size, elapsed_ms))
         if expected_body_size != body_size:
             logging.error("incorrect body has been received [size: %d - expected size: %d]" % (
                 body_size, expected_body_size))
@@ -63,6 +87,7 @@ class Receiver(MessagingHandler):
 
     def _reset_stats(self):
         self._received = 0
+        self._e2e_times = list()
 
 
 # Main flow for sender app
@@ -70,9 +95,7 @@ if __name__ == "__main__":
     parsed_opts, args = common.parse_opts(False)
 
     # same message body and properties will be used by all sender instances
-    expected_body = common.generate_message_body(parsed_opts.message_size, "abcdedfgijklmnopqrstuvwxyz0123456789")
     expected_body_size = parsed_opts.message_size
-    expected_properties = common.generate_application_properties(parsed_opts.properties_size)
     expected_properties_size = parsed_opts.properties_size
 
     # initializing logging

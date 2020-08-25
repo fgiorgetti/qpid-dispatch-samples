@@ -1,7 +1,9 @@
-import optparse
 import logging
 import math
+import optparse
 import os
+import sys
+from datetime import datetime
 
 
 def generate_message_body(size, pattern) -> str:
@@ -13,8 +15,12 @@ def generate_application_properties(size) -> dict:
     props_size = 0
     i = 0
     while props_size < size:
-        k = "key-%d" % i
-        v = "value-%d" % i
+        if i == 0:
+            k = "time"
+            v = datetime.now().isoformat()
+        else:
+            k = "key-%d" % i
+            v = "value-%d" % i
         size_left = size - props_size
         # adding last key to fill the map with the correct size
         if size_left - len(k) - len(v) < 0:
@@ -53,7 +59,7 @@ def parse_opts(is_sender=False):
     parser.add_option("--message-size", default=os.getenv("CLIENT_MESSAGE_SIZE", "259"), type=int,
                       help="size of message body (or set CLIENT_MESSAGE_SIZE env var)")
     parser.add_option("--properties-size", default=os.getenv("CLIENT_PROPERTIES_SIZE", "512"), type=int,
-                      help="size of application properties (or set CLIENT_PROPERTIES_SIZE env var)")
+                      help="size of application properties - at least 32 bytes (or set CLIENT_PROPERTIES_SIZE env var)")
     reconnect_after_help = "after a given number of messages delivered the %s will recycle its connection " \
                            "(or set CLIENT_RECONNECT_AFTER env var)" % "sender" if is_sender else "receiver"
     parser.add_option("--reconnect-after", default=os.getenv("CLIENT_RECONNECT_AFTER", "1000"), type=int,
@@ -66,4 +72,7 @@ def parse_opts(is_sender=False):
     parser.add_option("--log-level", default=os.getenv("LOG_LEVEL", "INFO"),
                       help="logging level (or set LOG_LEVEL env var)")
     parsed_opts, args = parser.parse_args()
+    if parsed_opts.properties_size < 32:
+        print("properties-size must be greater than 32")
+        sys.exit(1)
     return parsed_opts, args

@@ -1,12 +1,12 @@
+import logging
+import multiprocessing
+import os
+
+from proton import Message
 from proton.handlers import MessagingHandler
 from proton.reactor import Container
-from proton import Message
+
 import common
-import logging
-import optparse
-import socket
-import os
-import multiprocessing
 
 """
 This AMQP sender application, sends one message, with a pre-defined
@@ -23,7 +23,6 @@ Run with `--help` for more info.
 
 # public sender variables (initialized after parsing)
 message_body = ""
-message_properties = dict()
 
 
 class Sender(MessagingHandler):
@@ -62,8 +61,9 @@ class Sender(MessagingHandler):
 
     def on_sendable(self, event):
         if self._sender.credit > 0 and self._next_task is None:
+            props = common.generate_application_properties(parsed_opts.properties_size)
             msg = Message(id="%s-%d" % (os.getpid(), self._sent + 1),
-                          properties=message_properties,
+                          properties=props,
                           body=message_body,
                           ttl=self.ttl)
             self._sender.send(msg)
@@ -104,9 +104,8 @@ if __name__ == "__main__":
     # parsing arguments
     parsed_opts, args = common.parse_opts(True)
 
-    # same message body and properties will be used by all sender instances
+    # same message body will be used by all sender instances
     message_body = common.generate_message_body(parsed_opts.message_size, "abcdedfgijklmnopqrstuvwxyz0123456789")
-    message_properties = common.generate_application_properties(parsed_opts.properties_size)
 
     # initializing logging
     common.initialize_logging(parsed_opts.log_level)

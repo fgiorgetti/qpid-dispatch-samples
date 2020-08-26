@@ -24,6 +24,7 @@ Run with `--help` for more info.
 
 # public sender variables (initialized after parsing)
 message_body = ""
+interrupted = False
 
 
 class Sender(MessagingHandler, threading.Thread):
@@ -47,10 +48,14 @@ class Sender(MessagingHandler, threading.Thread):
         self._rejected = 0
 
     def run(self):
-        self.container.run()
+        while not interrupted:
+            logging.info("starting sender container")
+            self.container.run()
+            logging.error("sender container stopped [interrupted = %s]" % interrupted)
 
     def interrupt(self):
         if self._sender:
+            logging.info("sender has been interrupted")
             self._sender.close()
             self.container.stop()
 
@@ -125,6 +130,8 @@ if __name__ == "__main__":
 
     # Interrupts all running senders
     def interrupt_handler(sig, f):
+        global interrupted
+        interrupted = True
         for sender in processes:
             sender.interrupt()
 

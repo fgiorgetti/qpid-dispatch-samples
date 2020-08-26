@@ -22,6 +22,7 @@ Run with `--help` for more info.
 """
 
 # public receiver variables (initialized after parsing)
+interrupted = False
 expected_body_size = 0
 expected_properties_size = 0
 
@@ -43,7 +44,10 @@ class Receiver(MessagingHandler, threading.Thread):
         self._elapsed_times = list()
 
     def run(self):
-        self.container.run()
+        while not interrupted:
+            logging.info("starting receiver container")
+            self.container.run()
+            logging.warning("receiver container stopped [interrupted = %s]" % interrupted)
 
     def interrupt(self):
         if self._receiver:
@@ -116,6 +120,8 @@ if __name__ == "__main__":
 
     # Interrupts all running senders
     def interrupt_handler(sig, f):
+        global interrupted
+        interrupted = True
         for receiver in processes:
             receiver.interrupt()
 

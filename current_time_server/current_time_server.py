@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import threading
 import http.server
 import socketserver
 import json
@@ -8,7 +9,6 @@ import json
 PORT = 8080
 
 
-#Handler = http.server.SimpleHTTPRequestHandler
 class Handler(http.server.BaseHTTPRequestHandler):
     def _set_headers(self):
         self.send_response(200)
@@ -21,10 +21,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
     # GET sends back a Hello world message
     def do_GET(self):
         self._set_headers()
+        #print(threading.active_count())
         self.wfile.write(json.dumps({'now': datetime.now().isoformat()}).encode())
 
 
-with socketserver.TCPServer(("0.0.0.0", PORT), Handler) as httpd:
+with socketserver.ThreadingTCPServer(("0.0.0.0", PORT), Handler) as httpd:
     print("serving at port", PORT)
     httpd.serve_forever()
 

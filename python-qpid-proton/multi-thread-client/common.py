@@ -1,3 +1,5 @@
+import http.client
+import json
 import logging
 import math
 import optparse
@@ -10,6 +12,25 @@ def generate_message_body(size, pattern) -> str:
     return (pattern * math.ceil(size / len(pattern)))[:size]
 
 
+def get_current_time_iso() -> str:
+    if not os.getenv("CURRENT_TIME_SERVICE"):
+        return datetime.now().isoformat()
+
+    conn = http.client.HTTPConnection(os.getenv("CURRENT_TIME_SERVICE"))
+    try:
+        conn.request("GET", "/")
+    except:
+        logging.warning("unable to connect with CURRENT_TIME_SERVICE at %s" % os.getenv("CURRENT_TIME_SERVICE"))
+        return datetime.now().isoformat()
+    
+    resp = conn.getresponse()
+    if resp.status != 200:
+        logging.warning("got a bad response from current-time-service")
+        return datetime.now().isoformat()
+    body = resp.read()
+    return json.loads(body)["now"]
+
+
 def generate_application_properties(size) -> dict:
     props = {}
     props_size = 0
@@ -17,7 +38,7 @@ def generate_application_properties(size) -> dict:
     while props_size < size:
         if i == 0:
             k = "time"
-            v = datetime.now().isoformat()
+            v = get_current_time_iso()
         else:
             k = "key-%d" % i
             v = "value-%d" % i
@@ -59,7 +80,7 @@ def parse_opts(is_sender=False):
     parser.add_option("--message-size", default=os.getenv("CLIENT_MESSAGE_SIZE", "259"), type=int,
                       help="size of message body (or set CLIENT_MESSAGE_SIZE env var)")
     parser.add_option("--properties-size", default=os.getenv("CLIENT_PROPERTIES_SIZE", "512"), type=int,
-                      help="size of application properties - at least 32 bytes (or set CLIENT_PROPERTIES_SIZE env var)")
+                      help="size of application properties - at least 64 bytes (or set CLIENT_PROPERTIES_SIZE env var)")
     reconnect_after_help = "after a given number of messages delivered the %s will recycle its connection " \
                            "(or set CLIENT_RECONNECT_AFTER env var)" % "sender" if is_sender else "receiver"
     parser.add_option("--reconnect-after", default=os.getenv("CLIENT_RECONNECT_AFTER", "1000"), type=int,
@@ -72,7 +93,7 @@ def parse_opts(is_sender=False):
     parser.add_option("--log-level", default=os.getenv("LOG_LEVEL", "INFO"),
                       help="logging level (or set LOG_LEVEL env var)")
     parsed_opts, args = parser.parse_args()
-    if parsed_opts.properties_size < 32:
-        print("properties-size must be greater than 32")
+    if parsed_opts.properties_size < 64:
+        print("properties-size must be greater than 64")
         sys.exit(1)
     return parsed_opts, args

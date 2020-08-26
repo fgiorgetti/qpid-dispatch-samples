@@ -75,9 +75,9 @@ class Receiver(MessagingHandler, threading.Thread):
         if msg.properties:
             # calculate elapsed time based on incoming time property
             if "time" in msg.properties:
-                now = datetime.now()
+                now = common.get_current_time_iso()
                 time_sent = msg.properties['time']  # ISO Format
-                elapsed = now - datetime.fromisoformat(time_sent)
+                elapsed = datetime.fromisoformat(now) - datetime.fromisoformat(time_sent)
                 elapsed_ms = int(elapsed.total_seconds()*1000)
                 # store elapsed time in ms
                 self._elapsed_times.append(elapsed_ms)

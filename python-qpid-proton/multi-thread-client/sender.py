@@ -37,7 +37,7 @@ class Sender(MessagingHandler, threading.Thread):
         self.interval_delay = opts.interval_delay
         self.reconnect_after = opts.reconnect_after
         self.ttl = opts.ttl
-        self.container = Container(self)
+        self.container = None
         self._sender = None
         self._url = "amqp://%s:%s/%s" % (self.host, self.port, self.address)
         self._next_task = None
@@ -50,6 +50,7 @@ class Sender(MessagingHandler, threading.Thread):
     def run(self):
         while not interrupted:
             logging.info("starting sender container")
+            self.container = Container(self)
             self.container.run()
             logging.error("sender container stopped [interrupted = %s]" % interrupted)
 
@@ -66,7 +67,8 @@ class Sender(MessagingHandler, threading.Thread):
         if self._sender is not None:
             logging.info("closing sender")
             self._sender.close()
-            event.connection.close()
+            if event.connection:
+                event.connection.close()
             self._reset_stats()
         logging.info("creating sender")
         self._sender = event.container.create_sender(self._url)

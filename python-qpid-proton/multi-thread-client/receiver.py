@@ -35,7 +35,7 @@ class Receiver(MessagingHandler, threading.Thread):
         self.port = opts.port
         self.address = opts.address
         self.reconnect_after = opts.reconnect_after
-        self.container = Container(self)
+        self.container = None
         self._receiver = None
         self._url = "amqp://%s:%s/%s" % (self.host, self.port, self.address)
         self._next_task = None
@@ -46,6 +46,7 @@ class Receiver(MessagingHandler, threading.Thread):
     def run(self):
         while not interrupted:
             logging.info("starting receiver container")
+            self.container = Container(self)
             self.container.run()
             logging.warning("receiver container stopped [interrupted = %s]" % interrupted)
 
@@ -61,10 +62,8 @@ class Receiver(MessagingHandler, threading.Thread):
         if self._receiver is not None:
             logging.info("closing receiver")
             self._receiver.close()
-            event.connection.close()
-            # should probably report to a push gateway
-            # for elapsed_ms in self._elapsed_times:
-            #     pass
+            if event.connection:
+                event.connection.close()
             self._reset_stats()
         logging.info("creating receiver")
         self._receiver = event.container.create_receiver(self._url)
@@ -79,12 +78,18 @@ class Receiver(MessagingHandler, threading.Thread):
         if msg.properties:
             # calculate elapsed time based on incoming time property
             if "time" in msg.properties:
+                before_request = datetime.now()
+                # request
                 now = common.get_current_time_iso()
+                after_request = datetime.now()
+                request_elapsed = after_request - before_request
+                request_elapsed_ms = int(request_elapsed.total_seconds()*1000)
+
                 time_sent = msg.properties['time']  # ISO Format
                 elapsed = datetime.fromisoformat(now) - datetime.fromisoformat(time_sent)
                 elapsed_ms = int(elapsed.total_seconds()*1000)
                 # store elapsed time in ms
-                self._elapsed_times.append(elapsed_ms)
+                self._elapsed_times.append(elapsed_ms - request_elapsed_ms)
 
             prop_size = sum([len(k)+len(msg.properties[k]) for k in msg.properties])
 

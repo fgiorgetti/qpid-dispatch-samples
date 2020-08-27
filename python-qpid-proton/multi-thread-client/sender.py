@@ -24,6 +24,7 @@ Run with `--help` for more info.
 
 # public sender variables (initialized after parsing)
 message_body = ""
+interrupted = False
 
 
 class Sender(MessagingHandler, threading.Thread):
@@ -36,7 +37,7 @@ class Sender(MessagingHandler, threading.Thread):
         self.interval_delay = opts.interval_delay
         self.reconnect_after = opts.reconnect_after
         self.ttl = opts.ttl
-        self.container = Container(self)
+        self.container = None
         self._sender = None
         self._url = "amqp://%s:%s/%s" % (self.host, self.port, self.address)
         self._next_task = None
@@ -47,10 +48,15 @@ class Sender(MessagingHandler, threading.Thread):
         self._rejected = 0
 
     def run(self):
-        self.container.run()
+        while not interrupted:
+            logging.info("starting sender container")
+            self.container = Container(self)
+            self.container.run()
+            logging.error("sender container stopped [interrupted = %s]" % interrupted)
 
     def interrupt(self):
         if self._sender:
+            logging.info("sender has been interrupted")
             self._sender.close()
             self.container.stop()
 
@@ -61,7 +67,8 @@ class Sender(MessagingHandler, threading.Thread):
         if self._sender is not None:
             logging.info("closing sender")
             self._sender.close()
-            event.connection.close()
+            if event.connection:
+                event.connection.close()
             self._reset_stats()
         logging.info("creating sender")
         self._sender = event.container.create_sender(self._url)
@@ -125,6 +132,8 @@ if __name__ == "__main__":
 
     # Interrupts all running senders
     def interrupt_handler(sig, f):
+        global interrupted
+        interrupted = True
         for sender in processes:
             sender.interrupt()
 

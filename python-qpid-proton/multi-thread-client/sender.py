@@ -82,7 +82,8 @@ class Sender(MessagingHandler, threading.Thread):
             msg = Message(id="%s-%d" % (os.getpid(), self._sent + 1),
                           properties=props,
                           body=message_body,
-                          ttl=self.ttl)
+                          ttl=self.ttl,
+                          durable=True)
             self._sender.send(msg)
             self._sent += 1
             if self.interval_delay > 0:

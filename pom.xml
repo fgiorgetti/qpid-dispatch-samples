@@ -19,6 +19,8 @@
         <env.camel.version>3.2.0</env.camel.version>
         <env.spring.version>5.1.4.RELEASE</env.spring.version>
         <env.qpidjms.version>0.40.0</env.qpidjms.version>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -40,6 +42,11 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-spring</artifactId>
+            <version>${env.camel.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-spring-main</artifactId>
             <version>${env.camel.version}</version>
         </dependency>
         <dependency>

@@ -20,7 +20,7 @@ package org.apache.qpid.dispatch.amqp.samples.qpidjmstls.main;
  * under the License.
  *
  */
-import javax.jms.*;
+import jakarta.jms.*;
 import javax.naming.InitialContext;
 
 public class TLSReceiver {
@@ -49,7 +49,8 @@ public class TLSReceiver {
         Destination queue = (Destination) context.lookup(TLSInitialContext.LOOKUP_QUEUE);
 
         // Connecting to broker
-        Connection connection = factory.createConnection(System.getProperty("USER"), System.getProperty("PASSWORD"));
+        Connection connection = factory.createConnection();
+//        Connection connection = factory.createConnection(System.getProperty("USER"), System.getProperty("PASSWORD"));
         connection.start();
 
         // Creating a session

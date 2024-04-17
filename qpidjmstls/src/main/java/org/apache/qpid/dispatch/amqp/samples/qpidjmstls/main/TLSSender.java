@@ -20,7 +20,7 @@ package org.apache.qpid.dispatch.amqp.samples.qpidjmstls.main;
  * under the License.
  *
  */
-import javax.jms.*;
+import jakarta.jms.*;
 import javax.naming.InitialContext;
 
 public class TLSSender {

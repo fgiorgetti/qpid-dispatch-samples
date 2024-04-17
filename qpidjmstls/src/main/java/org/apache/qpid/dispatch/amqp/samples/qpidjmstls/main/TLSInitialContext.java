@@ -25,11 +25,13 @@ public class TLSInitialContext {
     private static final String KEY_QUEUE = "queue";
 
     static {
-        defaultProperties.put("transport.keyStoreLocation", "client.keystore");
-        defaultProperties.put("transport.keyStorePassword", "12345");
+        defaultProperties.put("transport.keyStoreLocation", "/mykeystore");
+        defaultProperties.put("transport.keyStorePassword", "redhat");
         defaultProperties.put("transport.verifyHost", "false");
-        defaultProperties.put("transport.keyAlias", "client");
+        defaultProperties.put("transport.keyAlias", "broker");
         defaultProperties.put("transport.trustAll", "true");
+        defaultProperties.put("amqp.saslMechanisms", "EXTERNAL");
+//        defaultProperties.put("amqp.traceFrames", "true");
     }
 
     public static InitialContext generateInitialContext() throws IOException, NamingException {
@@ -61,11 +63,11 @@ public class TLSInitialContext {
         Properties p = new Properties();
 
         // Default options
-        p.put("java.naming.factory.initial", INITIAL_CONTEXT);
+        p.put(InitialContext.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT);
         p.put("connectionfactory.amqpFactory", cf.toString());
         p.put("queue.myQueueLookup", internalProp.getProperty(KEY_QUEUE, "queue"));
 
-        //System.out.println(p);
+        System.out.println(p);
         return new InitialContext(p);
 
     }
